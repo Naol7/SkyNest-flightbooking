@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Book Flight - Sky Nest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #4e73df, #224abe);
+            color: white;
+        }
+        .container-bg {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+        }
+        footer {
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+        }
+    </style>
+</head>
+<body class="py-10">
+    <div class="flex items-center gap-20 px-20 pt-20 pb-5 rounded-md h-1/2 w-2/3 mx-auto container-bg">
+        <div class="w-full flex flex-col gap-10 p-10">
+            <div class="flex flex-col items-center mb-8">
+                <h1 class="text-4xl font-bold text-white">Book Your Flight</h1>
+                <p class="text-sm font-light text-gray-300">Secure your journey with Sky Nest</p>
+            </div>
+
+            <!-- Booking Form -->
+            <form id="bookingForm" class="flex flex-col gap-4 mb-20">
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="flex flex-col">
+                        <label for="flightId">Select Flight</label>
+                        <select id="flightId" class="border h-11 rounded-md pl-2 text-lg shadow-sm bg-gray-100 text-black" required>
+                            <option value="">Choose a flight</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="seatCount">Number of Seats</label>
+                        <input id="seatCount" type="number" min="1" class="border h-11 rounded-md pl-2 text-lg shadow-sm bg-gray-100 text-black" required />
+                    </div>
+                </div>
+
+                <div class="w-full mt-4">
+                    <button type="submit" class="w-full h-11 rounded-md bg-[#3D5CB8] text-white font-bold text-lg">
+                        Confirm Booking
+                    </button>
+                    <p class="flex justify-center mt-4">
+                        <a href="/" class="text-[#3D5CB8] font-bold">← Back to Home</a>
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="flex flex-col px-20 pt-20">
+        <div class="py-2">
+            <p class="text-lg text-center">
+                &copy; 2025 Sky Nest Booking 24/7. All rights reserved
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        function getUserIdFromToken() {
+            const token = localStorage.getItem('jwtToken');
+            if (!token) return null;
+            
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return payload.userId ? parseInt(payload.userId) : null;
+            } catch (error) {
+                console.error('Error parsing JWT:', error);
+                return null;
+            }
+}
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication
+            const token = localStorage.getItem("jwtToken");
+            if (!token) {
+                alert('Please login first');
+                window.location.href = '/login';
+                return;
+            }
+
+            // Fetch available flights
+            try {
+                const response = await fetch('/api/flights');
+                const flights = await response.json();
+                const flightSelect = document.getElementById('flightId');
+                
+                flights.forEach(flight => {
+                    const option = document.createElement('option');
+                    option.value = flight.id;
+                    option.textContent = `${flight.origin} → ${flight.destination} | ${flight.departureTime}`;
+                    flightSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading flights:', error);
+                alert('Failed to load available flights');
+            }
+        });
+
+        document.getElementById("bookingForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            
+        const urlParams = new URLSearchParams(window.location.search);
+        const flightId = urlParams.get('flightId');
+        if (flightId) {
+            document.getElementById('flightId').value = flightId;
+}
+            const token = localStorage.getItem("jwtToken");
+            if (!token) {
+                alert('Please login first');
+                window.location.href = '/login';
+                return;
+            }
+
+            const userId = getUserIdFromToken();
+            if (!userId) {
+                alert('Invalid user session');
+                window.location.href = '/login';
+                return;
+            }
+
+            const bookingData = {
+                userId: userId,
+                flightId: document.getElementById('flightId').value,
+                seatCount: parseInt(document.getElementById('seatCount').value)
+            };
+
+            try {
+                const response = await fetch('/api/bookings/book', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(bookingData)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('Booking successful!');
+                    window.location.href = '/';
+                } else {
+                    alert(result.error || 'Booking failed');
+                }
+            } catch (error) {
+                console.error('Booking error:', error);
+                alert('Failed to process booking');
+            }
+        });
+    </script>
+</body>
+</html>
