@@ -1,3 +1,4 @@
+DELETE FROM flight;
 INSERT INTO flight (flight_number, origin, destination, departure_time, arrival_time, total_seats, available_seats, price) VALUES
 ('FLY001', 'San Francisco', 'Tokyo', '2025-02-10 09:15:00', '2025-02-11 14:30:00', 180, 180, 750.00),
 ('JET002', 'Berlin', 'New York', '2025-03-15 18:45:00', '2025-03-16 04:20:00', 200, 200, 900.00),
