@@ -57,10 +57,8 @@ SkyNest is a **Flight Booking System** built with **Spring Boot** and **MySQL**.
    ```
 
 2. **Configure MySQL**:
-   - Create a database named `flight_booking_db` in MySQL.
    - Update `application.properties` with your MySQL credentials:
      ```properties
-     spring.datasource.url=jdbc:mysql://localhost:3306/flight_booking_db
      spring.datasource.username=your_mysql_username
      spring.datasource.password=your_mysql_password
      ```
