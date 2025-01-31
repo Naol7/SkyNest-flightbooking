@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Find Flights - Sky Nest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #4e73df, #224abe);
+            color: white;
+        }
+        .container-bg {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+        }
+        footer {
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+        }
+        .flight-card {
+            transition: transform 0.2s;
+        }
+        .flight-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body class="py-10">
+    <div class="container-bg w-4/5 mx-auto p-8 mb-8">
+        <div class="flex flex-col items-center mb-8">
+            <h1 class="text-4xl font-bold text-white">Find Your Flight</h1>
+            <p class="text-sm font-light text-gray-300">Search across thousands of destinations</p>
+        </div>
+
+        <!-- Search Form -->
+        <form id="searchForm" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="flex flex-col">
+                <label for="origin">From</label>
+                <input type="text" id="origin" class="border h-11 rounded-md pl-2 text-lg shadow-sm bg-gray-100 text-black" 
+                       placeholder="Enter origin city" />
+            </div>
+            <div class="flex flex-col">
+                <label for="destination">To</label>
+                <input type="text" id="destination" class="border h-11 rounded-md pl-2 text-lg shadow-sm bg-gray-100 text-black" 
+                       placeholder="Enter destination city" />
+            </div>
+            <div class="flex items-end gap-2">
+                <button type="submit" class="h-11 w-full rounded-md bg-[#3D5CB8] text-white font-bold text-lg">
+                    Search Flights
+                </button>
+                <button type="button" onclick="loadAllFlights()" class="h-11 px-4 rounded-md bg-gray-600 text-white font-bold text-lg">
+                    Show All
+                </button>
+            </div>
+        </form>
+
+        <!-- Flight List -->
+        <div id="flightList" class="grid grid-cols-1 gap-4">
+            <!-- Flight cards will be dynamically inserted here -->
+        </div>
+    </div>
+
+    <script>
+        // Load flights on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllFlights();
+        });
+
+        // Handle search form submission
+        document.getElementById('searchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const origin = document.getElementById('origin').value;
+            const destination = document.getElementById('destination').value;
+            
+            if (!origin || !destination) {
+                alert('Please fill in both origin and destination');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/flights/search?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}`);
+                const flights = await response.json();
+                displayFlights(flights);
+            } catch (error) {
+                console.error('Search error:', error);
+                alert('Failed to search flights');
+            }
+        });
+
+        // Load all flights (fixed version)
+        async function loadAllFlights() {
+            try {
+                const response = await fetch('/api/flights');
+                if (!response.ok) throw new Error('Failed to load flights');
+                const flights = await response.json();
+                displayFlights(flights);
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message);
+            }
+        }
+
+        // Display flights in the UI
+        function displayFlights(flights) {
+            const flightList = document.getElementById('flightList');
+            flightList.innerHTML = '';
+
+            if (flights.length === 0) {
+                flightList.innerHTML = `
+                    <div class="text-center py-8 text-gray-300">
+                        No flights found matching your criteria
+                    </div>
+                `;
+                return;
+            }
+
+            flights.forEach(flight => {
+                const flightCard = document.createElement('div');
+                flightCard.className = 'flight-card bg-gray-800 rounded-lg p-6 shadow-lg';
+                flightCard.innerHTML = `
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div class="flex-1">
+                            <div class="text-xl font-bold">${flight.flightNumber}</div>
+                            <div class="text-sm text-gray-400">${formatDate(flight.departureTime)}</div>
+                        </div>
+                        
+                        <div class="flex-1 text-center">
+                            <div class="text-2xl font-bold">${flight.origin} → ${flight.destination}</div>
+                            <div class="text-sm text-gray-400">
+                                ${formatTime(flight.departureTime)} - ${formatTime(flight.arrivalTime)}
+                            </div>
+                        </div>
+                        
+                        <div class="flex-1 text-right">
+                            <div class="text-2xl font-bold text-[#3D5CB8]">$${flight.price.toFixed(2)}</div>
+                            <div class="text-sm text-gray-400">
+                                ${flight.availableSeats} seats available
+                            </div>
+                        </div>
+                        
+                        <button onclick="bookFlight('${flight.id}')" 
+                                class="mt-4 md:mt-0 px-6 py-2 rounded-md bg-[#3D5CB8] text-white font-bold hover:bg-[#2d4375] transition">
+                            Book Now
+                        </button>
+                    </div>
+                `;
+                flightList.appendChild(flightCard);
+            });
+        }
+
+        // Format date and time
+        function formatDate(dateTimeString) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateTimeString).toLocaleDateString('en-US', options);
+        }
+
+        function formatTime(dateTimeString) {
+            const options = { hour: 'numeric', minute: '2-digit', hour12: true };
+            return new Date(dateTimeString).toLocaleTimeString('en-US', options);
+        }
+
+        // Handle book now button
+        function bookFlight(flightId) {
+            const token = localStorage.getItem('jwtToken');
+            if (!token) {
+                alert('Please login to book a flight');
+                window.location.href = '/login';
+                return;
+            }
+            window.location.href = `/bookFlight?flightId=${flightId}`;
+        }
+    </script>
+</body>
+</html>
