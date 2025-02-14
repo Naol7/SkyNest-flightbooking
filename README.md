@@ -11,13 +11,10 @@
 1. [Project Overview](#project-overview)
 2. [Features](#features)
 3. [Technologies Used](#technologies-used)
-4. [Database Schema](#database-schema)
-5. [Setup Instructions](#setup-instructions)
-6. [API Endpoints](#api-endpoints)
-7. [Frontend Pages](#frontend-pages)
-8. [Contributing](#contributing)
-9. [Contributors](#contributors)
-10. [License](#license)
+4. [Setup Instructions](#setup-instructions)
+5. [API Endpoints](#api-endpoints)
+6. [Frontend Pages](#frontend-pages)
+
 
 ---
 
@@ -102,12 +99,6 @@ SkyNest is a **Flight Booking System** built with **Spring Boot** and **MySQL**.
 
 
 
-## **Contributors**
-| Name              | ID            |
-|------------------|--------------|
-| Naol Gezahegne   | UGR/2063/14  |
-| Samuel Tenagne   | UGR/8506/14  |
-| Ermiyas Tesfaye  | UGR/6782/14  |
 
 
 
